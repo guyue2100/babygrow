@@ -11,10 +11,7 @@ const app = express();
 const PORT = 3000;
 
 // Initialize SQLite Database
-// On Vercel, we must use /tmp for any writable files, but note that it won't persist between requests.
-// For production, consider using a remote database like Supabase or MongoDB.
-const dbPath = process.env.VERCEL ? '/tmp/articles.db' : 'articles.db';
-const db = new Database(dbPath);
+const db = new Database('articles.db');
 
 // Create tables
 db.exec(`
@@ -183,9 +180,4 @@ async function startServer() {
   });
 }
 
-// Export for Vercel
-export default app;
-
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  startServer();
-}
+startServer();
