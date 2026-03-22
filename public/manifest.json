@@ -1,0 +1,16 @@
+{
+  "name": "Baby Growth Dashboard",
+  "short_name": "BabyGrow",
+  "description": "Track baby growth and predict adult height with AI.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
