@@ -152,7 +152,7 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
                 step="0.1"
                 value={fatherHeight}
                 onChange={(e) => setFatherHeight(e.target.value)}
-                placeholder="0"
+                placeholder="175"
                 className="w-full bg-transparent border-none focus:ring-0 font-medium"
               />
             </div>
@@ -167,7 +167,7 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
                 step="0.1"
                 value={motherHeight}
                 onChange={(e) => setMotherHeight(e.target.value)}
-                placeholder="0"
+                placeholder="162"
                 className="w-full bg-transparent border-none focus:ring-0 font-medium"
               />
             </div>
@@ -204,7 +204,7 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
                       <span className="text-[10px] font-black text-slate-500 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-tighter">#{index + 1}</span>
                       {!isExpanded && (
                         <div className="flex items-center space-x-4 text-sm font-medium text-zinc-600">
-                          <span className="flex items-center"><Calendar className="w-3 h-3 mr-1 text-zinc-400"/> {m.date ? new Date(m.date).toLocaleDateString() : '-'}</span>
+                          <span className="flex items-center"><Calendar className="w-3 h-3 mr-1 text-zinc-400"/> {m.date || '-'}</span>
                           <span className="flex items-center"><Ruler className="w-3 h-3 mr-1 text-zinc-400"/> {m.height ? `${m.height} cm` : '-'}</span>
                           <span className="flex items-center"><Weight className="w-3 h-3 mr-1 text-zinc-400"/> {m.weight ? `${m.weight} kg` : '-'}</span>
                         </div>
@@ -265,7 +265,7 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
                             step="0.1"
                             value={m.height}
                             onChange={(e) => handleUpdateMeasurement(index, 'height', e.target.value)}
-                            placeholder="0"
+                            placeholder="0.0"
                             className="w-full bg-transparent border-none focus:ring-0 text-sm font-medium"
                             required
                           />
@@ -281,7 +281,7 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
                             step="0.01"
                             value={m.weight}
                             onChange={(e) => handleUpdateMeasurement(index, 'weight', e.target.value)}
-                            placeholder="0"
+                            placeholder="0.00"
                             className="w-full bg-transparent border-none focus:ring-0 text-sm font-medium"
                             required
                           />
