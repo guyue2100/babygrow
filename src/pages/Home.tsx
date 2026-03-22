@@ -61,34 +61,13 @@ export default function Home() {
   const [loadingArticles, setLoadingArticles] = useState(true);
   const [assessmentData, setAssessmentData] = useState<any>(() => {
     const saved = localStorage.getItem('growth_assessment');
-    const defaultData = {
+    return saved ? JSON.parse(saved) : {
       gender: 'boy',
       birthday: new Date().toISOString().split('T')[0],
       fatherHeight: '0',
       motherHeight: '0',
       measurements: [{ date: new Date().toISOString().split('T')[0], height: '0', weight: '0' }]
     };
-    
-    if (!saved) return defaultData;
-    
-    try {
-      const parsed = JSON.parse(saved);
-      // Ensure empty fields are replaced with defaults
-      return {
-        ...defaultData,
-        ...parsed,
-        fatherHeight: parsed.fatherHeight || '0',
-        motherHeight: parsed.motherHeight || '0',
-        measurements: (parsed.measurements || []).map((m: any) => ({
-          ...m,
-          height: m.height || '0',
-          weight: m.weight || '0',
-          date: m.date || new Date().toISOString().split('T')[0]
-        }))
-      };
-    } catch (e) {
-      return defaultData;
-    }
   });
 
   // Dynamic SEO Update
