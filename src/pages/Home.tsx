@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { differenceInDays, parseISO } from 'date-fns';
-import { TrendingUp, BookOpen, ArrowRight, Eye, Calendar } from 'lucide-react';
+import { TrendingUp, BookOpen, ArrowRight, Eye } from 'lucide-react';
 import { GrowthChart } from '../components/GrowthChart';
 import { GrowthAssessmentForm } from '../components/GrowthAssessmentForm';
 import { HeightPredictor } from '../components/HeightPredictor';
@@ -34,18 +34,19 @@ export default function Home() {
   const [recentArticles, setRecentArticles] = useState<Article[]>([]);
   const [loadingArticles, setLoadingArticles] = useState(true);
 
-  // 需求：清空所有默认值，包括父母身高、生日和测量日期
+  // 1. 初始化清空所有数据（包括父母身高）
   const [assessmentData, setAssessmentData] = useState<any>({
     gender: 'boy',
     birthday: '', 
-    fatherHeight: '', // 已清空
-    motherHeight: '', // 已清空
+    fatherHeight: '', 
+    motherHeight: '', 
     measurements: [{ date: '', height: '0', weight: '0' }]
   });
 
   useEffect(() => {
     document.title = `${t('title')} - ${t('aiPredictor')}`;
-    // 关键：将 HTML 语言属性与站点语言同步，影响日期控件显示
+    
+    // 2. 关键：同步 HTML lang 属性，确保浏览器原生日期控件识别正确语言
     document.documentElement.lang = i18n.language || 'en';
   }, [t, i18n.language]);
 
@@ -53,7 +54,9 @@ export default function Home() {
     const fetchRecentArticles = async () => {
       try {
         const { data, error } = await supabase.from('articles').select('*').order('created_at', { ascending: false }).limit(3);
-        if (!error) setRecentArticles(data || []);
+        if (!error && data) setRecentArticles(data);
+      } catch (err) {
+        console.error('Error:', err);
       } finally {
         setLoadingArticles(false);
       }
@@ -73,11 +76,10 @@ export default function Home() {
     setAssessmentData(data);
   };
 
-  // 需求：过滤掉没有填写日期的记录，确保数据分析准确
   const records = useMemo(() => {
     if (!assessmentData?.measurements || !assessmentData.birthday) return [];
     return assessmentData.measurements
-      .filter((m: any) => m.date && m.date !== "")
+      .filter((m: any) => m.date && m.date !== "") 
       .map((m: any, index: number) => {
         const ageInMonths = Number((differenceInDays(parseISO(m.date), parseISO(assessmentData.birthday)) / 30.4375).toFixed(2));
         return { id: `record-${index}`, date: m.date, ageInMonths, height: parseFloat(m.height), weight: parseFloat(m.weight) };
@@ -121,7 +123,7 @@ export default function Home() {
 
         <section className="w-full">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-black text-zinc-900 flex items-center"><BookOpen className="w-7 h-7 mr-3 text-indigo-500" />{t('latestArticles')}</h2>
+            <h2 className="text-2xl font-black text-zinc-900 flex items-center">{t('latestArticles')}</h2>
             <Link to="/articles" className="flex items-center text-sm font-bold text-indigo-600 hover:translate-x-1 transition-transform">{t('viewAll')} <ArrowRight className="w-4 h-4 ml-1" /></Link>
           </div>
           {!loadingArticles && (
@@ -139,13 +141,6 @@ export default function Home() {
           )}
         </section>
       </main>
-
-      <footer className="max-w-4xl mx-auto px-4 md:px-6 mt-20 mb-10">
-        <div className="bg-white/60 backdrop-blur-md p-10 md:p-16 rounded-[3rem] border border-black/5">
-          <h2 className="text-2xl font-black text-zinc-900 mb-8">{t('seoTitle')}</h2>
-          <div className="grid md:grid-cols-2 gap-8 text-zinc-600 text-sm leading-relaxed mb-10"><p>{t('seoContent1')}</p><p>{t('seoContent2')}</p></div>
-        </div>
-      </footer>
     </div>
   );
 }
