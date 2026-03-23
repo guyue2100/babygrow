@@ -91,7 +91,6 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
       </div>
 
       <div className="space-y-8">
-        {/* Profile Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-[2rem] border border-slate-100">
           <div className="space-y-4">
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('gender')}</label>
@@ -112,7 +111,7 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
             <div className="flex items-center bg-white p-3 rounded-xl border border-zinc-100 focus-within:border-indigo-500 shadow-sm">
               <Calendar className="w-5 h-5 text-zinc-400 mr-2" />
               <input 
-                key={`birthday-${i18n.language}`} // 核心修改点：强制日期控件随语言重新渲染
+                key={`birthday-field-${i18n.language}`} // 强制重新挂载以同步占位符语言
                 type="date" 
                 value={birthday} 
                 onChange={(e) => setBirthday(e.target.value)} 
@@ -139,7 +138,6 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
           </div>
         </div>
 
-        {/* Measurements Section */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{t('measurements')}</label>
@@ -180,7 +178,7 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold text-zinc-400 uppercase">{t('date')}</label>
                         <input 
-                          key={`m-date-${index}-${i18n.language}`} // 核心修改点
+                          key={`measure-date-${index}-${i18n.language}`} // 强制重新挂载以同步占位符语言
                           type="date" 
                           value={m.date} 
                           onChange={(e) => handleUpdateMeasurement(index, 'date', e.target.value)} 
