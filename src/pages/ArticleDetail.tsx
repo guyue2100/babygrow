@@ -4,7 +4,7 @@ import { ArrowLeft, Clock, Calendar, Eye, Share2, ChevronRight, BookOpen } from 
 import Markdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
 // 导入 supabase 客户端
-import { supabase } from '../src/services/supabase'; 
+import { supabase } from '../services/supabase'; 
 
 interface Article {
   id: number;
