@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Eye, Calendar, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+// 导入 supabase 客户端实例
+import { supabase } from '../supabaseClient'; 
 
 interface Article {
   id: number;
@@ -35,16 +37,24 @@ export default function Articles() {
   };
 
   useEffect(() => {
-    fetch('/api/articles')
-      .then(res => res.json())
-      .then(data => {
-        setArticles(data);
+    // 替换 fetch 为直接查询 Supabase
+    const fetchArticles = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('articles') // 确保与你 Supabase 中的表名一致
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setArticles(data || []);
+      } catch (err) {
+        console.error('获取文章失败:', err);
+      } finally {
         setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
+      }
+    };
+
+    fetchArticles();
   }, []);
 
   const featuredArticle = useMemo(() => articles[0], [articles]);
