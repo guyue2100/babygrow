@@ -12,18 +12,30 @@ const PORT = 3000;
 // Initialize Supabase Client
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('CRITICAL: Supabase environment variables are missing!');
+  console.log('Available env keys:', Object.keys(process.env).filter(k => k.includes('SUPABASE')));
+}
+
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 app.use(express.json());
 
 // API Routes
 app.get('/api/articles', async (req, res) => {
+  console.log('Fetching articles from Supabase...');
   const { data, error } = await supabase
     .from('articles')
     .select('id, title, summary, created_at, read_count, total_duration, initial_read_count, pv, uv_count')
     .order('created_at', { ascending: false });
   
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.error('Error fetching articles:', error);
+    return res.status(500).json({ error: error.message });
+  }
+  
+  console.log(`Successfully fetched ${data?.length || 0} articles`);
   res.json(data);
 });
 
@@ -121,11 +133,34 @@ app.put('/api/articles/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/api/debug-env', (req, res) => {
+app.get('/api/debug-env', async (req, res) => {
+  let supabaseStatus = 'unknown';
+  let articleCount = 0;
+  
+  try {
+    const { count, error } = await supabase
+      .from('articles')
+      .select('*', { count: 'exact', head: true });
+    
+    if (error) {
+      supabaseStatus = `Error: ${error.message}`;
+    } else {
+      supabaseStatus = 'Connected';
+      articleCount = count || 0;
+    }
+  } catch (e: any) {
+    supabaseStatus = `Exception: ${e.message}`;
+  }
+
   res.json({
-    geminiKey: process.env.GEMINI_API_KEY ? `Length: ${process.env.GEMINI_API_KEY.length}` : 'undefined',
-    supabaseUrl: process.env.SUPABASE_URL ? 'defined' : 'undefined',
-    allKeys: Object.keys(process.env).filter(k => k.includes('GEMINI') || k.includes('KEY') || k.includes('SUPABASE'))
+    nodeEnv: process.env.NODE_ENV,
+    isVercel: !!process.env.VERCEL,
+    supabaseUrl: supabaseUrl ? 'Defined' : 'Missing',
+    supabaseAnonKey: supabaseAnonKey ? 'Defined' : 'Missing',
+    supabaseStatus,
+    articleCount,
+    geminiKey: process.env.GEMINI_API_KEY ? 'Defined' : 'Missing',
+    timestamp: new Date().toISOString()
   });
 });
 
