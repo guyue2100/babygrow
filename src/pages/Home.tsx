@@ -9,7 +9,7 @@ import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { predictHeight } from '../services/growthCalculations';
 import { Link } from 'react-router-dom';
 // 导入 supabase 客户端实例
-import { supabase } from '../supabaseClient'; 
+import { supabase } from '../src/services/supabase'; 
 
 interface Article {
   id: number;
