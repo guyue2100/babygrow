@@ -44,7 +44,7 @@ export default function Home() {
 
   useEffect(() => {
     document.title = `${t('title')} - ${t('aiPredictor')}`;
-    // 核心修改：确保 HTML 语言属性同步
+    // 关键：将 HTML 语言属性与站点语言同步
     document.documentElement.lang = i18n.language || 'en';
   }, [t, i18n.language]);
 
