@@ -43,33 +43,14 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
   
   const [gender, setGender] = useState<Gender>(initialData?.gender || 'boy');
   const [birthday, setBirthday] = useState(initialData?.birthday || '');
-  const [fatherHeight, setFatherHeight] = useState(initialData?.fatherHeight || ''); // 已清空默认值
-  const [motherHeight, setMotherHeight] = useState(initialData?.motherHeight || ''); // 已清空默认值
-  
-  const [measurements, setMeasurements] = useState<Measurement[]>(
-    initialData?.measurements || [
-      { date: '', height: '0', weight: '0' }
-    ]
-  );
+  const [fatherHeight, setFatherHeight] = useState(initialData?.fatherHeight || ''); 
+  const [motherHeight, setMotherHeight] = useState(initialData?.motherHeight || ''); 
+  const [measurements, setMeasurements] = useState<Measurement[]>(initialData?.measurements || [{ date: '', height: '0', weight: '0' }]);
 
-  // 需求：第一条记录为空时自动展开
+  // 第一条日期为空时自动展开
   const [expandedIndex, setExpandedIndex] = useState<number | null>(
-    measurements[0].date === '' ? 0 : null
+    measurements[0]?.date === '' ? 0 : null
   );
-
-  const handleAddMeasurement = () => {
-    if (measurements.length < 5) {
-      setMeasurements([...measurements, { date: '', height: '0', weight: '0' }]);
-      setExpandedIndex(measurements.length);
-    }
-  };
-
-  const handleRemoveMeasurement = (index: number) => {
-    if (measurements.length > 1) {
-      setMeasurements(measurements.filter((_, i) => i !== index));
-      if (expandedIndex === index) setExpandedIndex(null);
-    }
-  };
 
   const handleUpdateMeasurement = (index: number, field: keyof Measurement, value: string) => {
     const newMeasurements = [...measurements];
@@ -85,115 +66,97 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-black/5 space-y-6 max-w-full">
-      <div className="space-y-1">
-        <h3 className="text-xl font-bold text-zinc-900">{t('measurements')}</h3>
-        <p className="text-xs text-zinc-400">{t('subtitle')}</p>
+    <form onSubmit={handleSubmit} className="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-sm border border-black/5 space-y-8">
+      <div className="space-y-2">
+        <h3 className="text-2xl font-black text-zinc-900 tracking-tight">{t('measurements')}</h3>
+        <p className="text-sm text-zinc-400">{t('subtitle')}</p>
       </div>
 
-      <div className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-[2rem] border border-slate-100">
+      <div className="space-y-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8 bg-zinc-50/50 rounded-[2.5rem] border border-zinc-100">
+          {/* 性别选择 */}
           <div className="space-y-4">
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('gender')}</label>
+            <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest">{t('gender')}</label>
             <div className="flex space-x-4">
-              <button type="button" onClick={() => setGender('boy')} className={`flex-1 flex flex-col items-center justify-center p-4 rounded-2xl border-4 transition-all ${gender === 'boy' ? 'border-sky-400 bg-white shadow-sm' : 'border-transparent bg-white/50 text-zinc-400 opacity-60'}`}>
-                <div className="mb-2"><BoyIcon /></div>
-                <span className={`font-black text-sm ${gender === 'boy' ? 'text-sky-600' : 'text-zinc-400'}`}>{t('boy')}</span>
-              </button>
-              <button type="button" onClick={() => setGender('girl')} className={`flex-1 flex flex-col items-center justify-center p-4 rounded-2xl border-4 transition-all ${gender === 'girl' ? 'border-rose-400 bg-white shadow-sm' : 'border-transparent bg-white/50 text-zinc-400 opacity-60'}`}>
-                <div className="mb-2"><GirlIcon /></div>
-                <span className={`font-black text-sm ${gender === 'girl' ? 'text-rose-600' : 'text-zinc-400'}`}>{t('girl')}</span>
-              </button>
+              <button type="button" onClick={() => setGender('boy')} className={`flex-1 p-5 rounded-3xl border-4 transition-all ${gender === 'boy' ? 'border-sky-400 bg-white shadow-lg' : 'border-transparent bg-white/50 opacity-60'}`}><BoyIcon /><span className={`block mt-2 font-black ${gender === 'boy' ? 'text-sky-600' : 'text-zinc-400'}`}>{t('boy')}</span></button>
+              <button type="button" onClick={() => setGender('girl')} className={`flex-1 p-5 rounded-3xl border-4 transition-all ${gender === 'girl' ? 'border-rose-400 bg-white shadow-lg' : 'border-transparent bg-white/50 opacity-60'}`}><GirlIcon /><span className={`block mt-2 font-black ${gender === 'girl' ? 'text-rose-600' : 'text-zinc-400'}`}>{t('girl')}</span></button>
             </div>
           </div>
 
+          {/* 生日：使用 key 强制根据语言重绘原生控件文字 */}
           <div className="space-y-4">
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest">{t('birthday')}</label>
-            <div className="flex items-center bg-white p-3 rounded-xl border border-zinc-100 focus-within:border-indigo-500 shadow-sm">
-              <Calendar className="w-5 h-5 text-zinc-400 mr-2" />
+            <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest">{t('birthday')}</label>
+            <div className="flex items-center bg-white p-4 rounded-2xl border border-zinc-100 shadow-sm">
+              <Calendar className="w-5 h-5 text-zinc-400 mr-3" />
               <input 
-                key={`birthday-${i18n.language}`} // 同步语言占位符
+                key={`bday-${i18n.language}`} 
                 type="date" 
                 value={birthday} 
                 onChange={(e) => setBirthday(e.target.value)} 
-                className="w-full bg-transparent border-none focus:ring-0 font-medium" 
+                className="w-full bg-transparent border-none focus:ring-0 font-bold" 
                 required 
               />
             </div>
           </div>
 
+          {/* 父母身高 */}
           <div className="space-y-4">
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest">{t('fatherHeight')} (cm)</label>
-            <div className="flex items-center bg-white p-3 rounded-xl border border-zinc-100 focus-within:border-indigo-500 shadow-sm">
-              <Ruler className="w-5 h-5 text-zinc-400 mr-2" />
-              <input type="number" step="0.1" value={fatherHeight} onChange={(e) => setFatherHeight(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 font-medium" placeholder="-" />
+            <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest">{t('fatherHeight')} (cm)</label>
+            <div className="flex items-center bg-white p-4 rounded-2xl border border-zinc-100 shadow-sm">
+              <Ruler className="w-5 h-5 text-zinc-400 mr-3" />
+              <input type="number" step="0.1" value={fatherHeight} onChange={(e) => setFatherHeight(e.target.value)} placeholder="-" className="w-full bg-transparent border-none focus:ring-0 font-bold" />
             </div>
           </div>
 
           <div className="space-y-4">
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest">{t('motherHeight')} (cm)</label>
-            <div className="flex items-center bg-white p-3 rounded-xl border border-zinc-100 focus-within:border-indigo-500 shadow-sm">
-              <Ruler className="w-5 h-5 text-zinc-400 mr-2" />
-              <input type="number" step="0.1" value={motherHeight} onChange={(e) => setMotherHeight(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 font-medium" placeholder="-" />
+            <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest">{t('motherHeight')} (cm)</label>
+            <div className="flex items-center bg-white p-4 rounded-2xl border border-zinc-100 shadow-sm">
+              <Ruler className="w-5 h-5 text-zinc-400 mr-3" />
+              <input type="number" step="0.1" value={motherHeight} onChange={(e) => setMotherHeight(e.target.value)} placeholder="-" className="w-full bg-transparent border-none focus:ring-0 font-bold" />
             </div>
           </div>
         </div>
 
+        {/* 测量记录 */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{t('measurements')}</label>
-            {measurements.length < 5 && (
-              <button type="button" onClick={handleAddMeasurement} className="text-xs font-black text-indigo-500 flex items-center bg-indigo-50 px-4 py-2 rounded-full">
-                <Plus className="w-4 h-4 mr-1" /> {t('addRecord')}
-              </button>
-            )}
+            <label className="text-xs font-black text-zinc-400 uppercase tracking-widest">{t('measurements')}</label>
+            <button type="button" onClick={() => { setMeasurements([...measurements, { date: '', height: '0', weight: '0' }]); setExpandedIndex(measurements.length); }} className="text-xs font-black text-indigo-500 bg-indigo-50 px-4 py-2 rounded-full"><Plus className="w-4 h-4 mr-1" /> {t('addRecord')}</button>
           </div>
 
           <div className="space-y-4">
             {measurements.map((m, index) => {
               const isExpanded = expandedIndex === index;
               return (
-                <div key={index} className="relative p-6 border border-zinc-100 rounded-3xl bg-white shadow-sm">
-                  <div className={`flex items-center justify-between ${isExpanded ? 'mb-6' : 'cursor-pointer'}`} onClick={() => !isExpanded && setExpandedIndex(index)}>
+                <div key={index} className={`p-6 border-2 rounded-[2rem] transition-all ${isExpanded ? 'border-indigo-100 bg-indigo-50/20' : 'border-zinc-50 bg-white'}`}>
+                  <div className={`flex items-center justify-between ${isExpanded ? 'mb-8' : 'cursor-pointer'}`} onClick={() => !isExpanded && setExpandedIndex(index)}>
                     <div className="flex items-center space-x-4">
-                      <span className="text-[10px] font-black text-slate-500 bg-slate-100 px-3 py-1 rounded-full uppercase">#{index + 1}</span>
-                      {!isExpanded && (
-                        <div className="flex items-center space-x-4 text-sm font-medium text-zinc-600">
-                          <span className="flex items-center"><Calendar className="w-3 h-3 mr-1 text-zinc-400"/> {m.date || '-'}</span>
-                          <span className="flex items-center"><Ruler className="w-3 h-3 mr-1 text-zinc-400"/> {m.height} cm</span>
-                        </div>
-                      )}
+                      <span className={`text-[10px] font-black px-3 py-1 rounded-full ${isExpanded ? 'bg-indigo-500 text-white' : 'bg-zinc-100 text-zinc-400'}`}>#{index + 1}</span>
+                      {!isExpanded && <span className="text-sm font-bold text-zinc-600">{m.date || '-'} | {m.height} cm</span>}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      {!isExpanded && (
-                        <button type="button" onClick={() => setExpandedIndex(index)} className="text-xs font-bold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full">{t('edit', 'Edit')}</button>
-                      )}
-                      {measurements.length > 1 && (
-                        <button type="button" onClick={(e) => { e.stopPropagation(); handleRemoveMeasurement(index); }} className="text-zinc-300 hover:text-red-400 p-2"><Trash2 className="w-4 h-4" /></button>
-                      )}
-                    </div>
+                    {measurements.length > 1 && <button type="button" onClick={(e) => { e.stopPropagation(); setMeasurements(measurements.filter((_, i) => i !== index)); }} className="text-zinc-300 hover:text-red-400 p-2"><Trash2 className="w-4 h-4" /></button>}
                   </div>
 
                   {isExpanded && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold text-zinc-400 uppercase">{t('date')}</label>
                         <input 
-                          key={`m-date-${index}-${i18n.language}`} // 同步语言占位符，显示原生连字符
+                          key={`m-date-${index}-${i18n.language}`} 
                           type="date" 
                           value={m.date} 
                           onChange={(e) => handleUpdateMeasurement(index, 'date', e.target.value)} 
-                          className="w-full bg-transparent border-b border-zinc-100 focus:border-indigo-500 py-1 text-sm font-medium focus:ring-0" 
+                          className="w-full bg-transparent border-b-2 border-zinc-100 py-2 text-sm font-bold focus:ring-0" 
                           required 
                         />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold text-zinc-400 uppercase">{t('height')} (cm)</label>
-                        <input type="number" step="0.1" value={m.height} onChange={(e) => handleUpdateMeasurement(index, 'height', e.target.value)} className="w-full bg-transparent border-b border-zinc-100 focus:border-indigo-500 py-1 text-sm font-medium focus:ring-0" placeholder="-" required />
+                        <input type="number" step="0.1" value={m.height} onChange={(e) => handleUpdateMeasurement(index, 'height', e.target.value)} className="w-full bg-transparent border-b-2 border-zinc-100 py-2 text-sm font-bold focus:ring-0" required />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold text-zinc-400 uppercase">{t('weight')} (kg)</label>
-                        <input type="number" step="0.01" value={m.weight} onChange={(e) => handleUpdateMeasurement(index, 'weight', e.target.value)} className="w-full bg-transparent border-b border-zinc-100 focus:border-indigo-500 py-1 text-sm font-medium focus:ring-0" placeholder="-" required />
+                        <input type="number" step="0.01" value={m.weight} onChange={(e) => handleUpdateMeasurement(index, 'weight', e.target.value)} className="w-full bg-transparent border-b-2 border-zinc-100 py-2 text-sm font-bold focus:ring-0" required />
                       </div>
                     </div>
                   )}
@@ -204,7 +167,7 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
         </div>
       </div>
 
-      <button type="submit" className="w-full bg-indigo-600 text-white py-5 rounded-[2rem] font-black text-lg flex items-center justify-center hover:bg-indigo-700 shadow-md active:translate-y-1 transition-all">
+      <button type="submit" className="w-full bg-indigo-600 text-white py-6 rounded-[2rem] font-black text-xl shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center">
         {t('calculate')} <ChevronRight className="w-6 h-6 ml-2" />
       </button>
     </form>
