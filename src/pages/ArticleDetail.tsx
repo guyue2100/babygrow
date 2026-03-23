@@ -3,6 +3,8 @@ import { useParams, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Clock, Calendar, Eye, Share2, ChevronRight, BookOpen } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
+// 导入 supabase 客户端
+import { supabase } from '../supabaseClient'; 
 
 interface Article {
   id: number;
@@ -63,67 +65,52 @@ export default function ArticleDetail() {
   }, []);
 
   useEffect(() => {
+    if (!id) return;
     setLoading(true);
-    // Fetch current article
-    fetch(`/api/articles/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        setArticle(data);
+
+    const fetchArticleData = async () => {
+      try {
+        // 1. 获取当前文章详情
+        const { data: currentArt, error: artError } = await supabase
+          .from('articles')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (artError) throw artError;
+        setArticle(currentArt);
+
+        // 2. 获取相关文章（排除当前篇，取前3个）
+        const { data: others, error: othersError } = await supabase
+          .from('articles')
+          .select('*')
+          .neq('id', id)
+          .limit(3);
+
+        if (!othersError) {
+          setRelatedArticles(others || []);
+        }
+
+        // 3. 增加阅读量计数 (PV)
+        if (!fromAdmin) {
+          await supabase.rpc('increment_read_count', { row_id: id });
+        }
+
+      } catch (err) {
+        console.error('获取文章详情失败:', err);
+      } finally {
         setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-
-    // Fetch related articles (excluding current)
-    fetch('/api/articles')
-      .then(res => res.json())
-      .then(data => {
-        const filtered = data.filter((a: Article) => a.id !== Number(id)).slice(0, 3);
-        setRelatedArticles(filtered);
-      })
-      .catch(console.error);
-  }, [id]);
-
-  useEffect(() => {
-    if (!article) return;
-
-    const startTime = Date.now();
-    const userId = localStorage.getItem('user_id') || Math.random().toString(36).substring(7);
-    localStorage.setItem('user_id', userId);
-    
-    // Track PV
-    fetch(`/api/articles/${id}/track`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'pv',
-        userId,
-        isAdminView: fromAdmin
-      }),
-    }).catch(console.error);
-
-    return () => {
-      const duration = Date.now() - startTime;
-      // Track Duration
-      fetch(`/api/articles/${id}/track`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'duration',
-          value: duration,
-          isAdminView: fromAdmin
-        }),
-      }).catch(console.error);
+      }
     };
-  }, [article, id, fromAdmin]);
+
+    fetchArticleData();
+  }, [id, fromAdmin]);
 
   if (loading) {
     return <div className="text-center py-20 text-zinc-500">{t('loading', 'Loading article...')}</div>;
   }
 
-  if (!article || 'error' in article) {
+  if (!article) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
         <h2 className="text-2xl font-bold text-zinc-900 mb-4">{t('articleNotFound', 'Article not found')}</h2>
@@ -134,29 +121,12 @@ export default function ArticleDetail() {
 
   return (
     <div className="min-h-screen pb-20 pt-6 md:pt-12 bg-[#FDFBF7]">
-      {/* Reading Progress Bar */}
       <div className="fixed top-0 left-0 w-full h-1 z-[60] bg-zinc-100">
         <div 
           className="h-full bg-indigo-600 transition-all duration-150 ease-out"
           style={{ width: `${scrollProgress}%` }}
         />
       </div>
-
-      {/* Article JSON-LD */}
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Article",
-          "headline": parseLocalizedText(article.title),
-          "description": parseLocalizedText(article.summary),
-          "image": article.image_url,
-          "datePublished": article.created_at,
-          "author": {
-            "@type": "Organization",
-            "name": "BabyGrow.online"
-          }
-        })}
-      </script>
 
       <div className="max-w-4xl mx-auto px-4 md:px-6">
         <Link 
@@ -170,7 +140,6 @@ export default function ArticleDetail() {
         </Link>
 
         <article className="space-y-12">
-          {/* Editorial Header */}
           <header className="space-y-8 text-center max-w-3xl mx-auto">
             <div className="flex items-center justify-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">
               <span className="px-3 py-1 bg-indigo-50 rounded-full border border-indigo-100">Parenting Guide</span>
@@ -208,7 +177,6 @@ export default function ArticleDetail() {
             </div>
           </header>
 
-          {/* Content Body */}
           <div className="max-w-3xl mx-auto">
             <div className="prose prose-zinc prose-indigo max-w-none 
               prose-headings:font-black prose-headings:tracking-tight prose-headings:text-zinc-900
@@ -223,10 +191,10 @@ export default function ArticleDetail() {
               prose-td:p-4 prose-td:border-b prose-td:border-zinc-100 prose-td:text-sm
               prose-blockquote:border-l-4 prose-blockquote:border-indigo-500 prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-zinc-700 prose-blockquote:my-12
             ">
+              {/* 渲染 Markdown 内容 */}
               <Markdown>{parseLocalizedText(article.content)}</Markdown>
             </div>
 
-            {/* Share Section */}
             <div className="mt-20 pt-10 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4">
                 <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Share this guide</span>
@@ -245,7 +213,6 @@ export default function ArticleDetail() {
           </div>
         </article>
 
-        {/* Related Articles Section */}
         {relatedArticles.length > 0 && (
           <section className="mt-32 space-y-10">
             <div className="flex items-center justify-between">
