@@ -39,23 +39,19 @@ const GirlIcon = () => (
 );
 
 export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ initialData, onSubmit }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
-  // 状态初始化
   const [gender, setGender] = useState<Gender>(initialData?.gender || 'boy');
-  // 【需求1】清空默认生日
   const [birthday, setBirthday] = useState(initialData?.birthday || '');
   const [fatherHeight, setFatherHeight] = useState(initialData?.fatherHeight || '175');
   const [motherHeight, setMotherHeight] = useState(initialData?.motherHeight || '160');
   
-  // 【需求1】清空首条记录日期
   const [measurements, setMeasurements] = useState<Measurement[]>(
     initialData?.measurements || [
       { date: '', height: '0', weight: '0' }
     ]
   );
 
-  // 【需求2】自动展开：如果第一条记录日期为空，则默认展开
   const [expandedIndex, setExpandedIndex] = useState<number | null>(
     measurements[0].date === '' ? 0 : null
   );
@@ -115,7 +111,14 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
             <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest">{t('birthday')}</label>
             <div className="flex items-center bg-white p-3 rounded-xl border border-zinc-100 focus-within:border-indigo-500 shadow-sm">
               <Calendar className="w-5 h-5 text-zinc-400 mr-2" />
-              <input type="date" value={birthday} onChange={(e) => setBirthday(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 font-medium" required />
+              <input 
+                key={`birthday-${i18n.language}`} // 核心修改点：强制日期控件随语言重新渲染
+                type="date" 
+                value={birthday} 
+                onChange={(e) => setBirthday(e.target.value)} 
+                className="w-full bg-transparent border-none focus:ring-0 font-medium" 
+                required 
+              />
             </div>
           </div>
 
@@ -176,7 +179,14 @@ export const GrowthAssessmentForm: React.FC<GrowthAssessmentFormProps> = ({ init
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold text-zinc-400 uppercase">{t('date')}</label>
-                        <input type="date" value={m.date} onChange={(e) => handleUpdateMeasurement(index, 'date', e.target.value)} className="w-full bg-transparent border-b border-zinc-100 focus:border-indigo-500 py-1 text-sm font-medium focus:ring-0" required />
+                        <input 
+                          key={`m-date-${index}-${i18n.language}`} // 核心修改点
+                          type="date" 
+                          value={m.date} 
+                          onChange={(e) => handleUpdateMeasurement(index, 'date', e.target.value)} 
+                          className="w-full bg-transparent border-b border-zinc-100 focus:border-indigo-500 py-1 text-sm font-medium focus:ring-0" 
+                          required 
+                        />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold text-zinc-400 uppercase">{t('height')} ({t('unitHeight')})</label>
