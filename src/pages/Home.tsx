@@ -8,6 +8,8 @@ import { HeightPredictor } from '../components/HeightPredictor';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { predictHeight } from '../services/growthCalculations';
 import { Link } from 'react-router-dom';
+// 导入 supabase 客户端实例
+import { supabase } from '../supabaseClient'; 
 
 interface Article {
   id: number;
@@ -75,13 +77,11 @@ export default function Home() {
     document.title = `${t('title')} - ${t('aiPredictor')}`;
     document.documentElement.lang = i18n.language || 'en';
     
-    // Update Meta Description
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute('content', `${t('subtitle')}. ${t('seoContent1')}`);
     }
 
-    // Update Meta Keywords
     let metaKeywords = document.querySelector('meta[name="keywords"]');
     if (!metaKeywords) {
       metaKeywords = document.createElement('meta');
@@ -90,7 +90,6 @@ export default function Home() {
     }
     metaKeywords.setAttribute('content', t('seoKeywords'));
 
-    // Update Canonical URL
     let canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) {
       canonical = document.createElement('link');
@@ -99,7 +98,6 @@ export default function Home() {
     }
     canonical.setAttribute('href', window.location.origin + window.location.pathname);
 
-    // Update Hreflang Tags
     const languages = ['en', 'zh', 'ja', 'ko', 'es', 'pt', 'de'];
     languages.forEach(lang => {
       let link = document.querySelector(`link[hreflang="${lang}"]`);
@@ -109,12 +107,9 @@ export default function Home() {
         link.setAttribute('hreflang', lang);
         document.head.appendChild(link);
       }
-      // In a real multi-page app, this would point to the localized URL
-      // For this SPA, we point to the main origin
       link.setAttribute('href', window.location.origin + window.location.pathname);
     });
 
-    // Add x-default hreflang
     let xDefault = document.querySelector('link[hreflang="x-default"]');
     if (!xDefault) {
       xDefault = document.createElement('link');
@@ -125,21 +120,30 @@ export default function Home() {
     xDefault.setAttribute('href', window.location.origin + window.location.pathname);
   }, [t, i18n.language]);
 
+  // 修改后的同步逻辑：直接从 Supabase 获取数据
   useEffect(() => {
-    fetch('/api/articles')
-      .then(res => res.json())
-      .then(data => {
-        setRecentArticles(data.slice(0, 3)); // Get top 3 articles
+    const fetchRecentArticles = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('articles') // 对应数据库中的 articles 表
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        setRecentArticles(data || []);
+      } catch (err) {
+        console.error('获取首页文章失败:', err);
+      } finally {
         setLoadingArticles(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoadingArticles(false);
-      });
+      }
+    };
+
+    fetchRecentArticles();
   }, []);
 
   const getDisplayReadCount = (article: Article) => {
-    const initial = article.initial_read_count || 800; // Default for old articles
+    const initial = article.initial_read_count || 800;
     return initial + (article.read_count * 5);
   };
 
@@ -191,7 +195,6 @@ export default function Home() {
   return (
     <div className="min-h-screen pb-10 md:pb-20 pt-6 md:pt-12 relative overflow-hidden">
       <BackgroundLogos />
-      {/* Language Switcher Floating */}
       <div className="fixed top-4 right-4 md:top-6 md:right-6 z-50 flex items-center gap-4">
         <Link to="/articles" className="text-sm font-medium text-zinc-600 hover:text-indigo-600 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm border border-zinc-200">
           Articles
@@ -200,10 +203,8 @@ export default function Home() {
       </div>
 
       <main className="max-w-5xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10">
-        {/* SEO Hidden H1 */}
         <h1 className="sr-only">{t('title')} - {t('aiPredictor')}</h1>
 
-        {/* GEO Direct Answer Section */}
         <div className="lg:col-span-12 mb-8 bg-white/40 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/20 shadow-sm">
           <h2 className="text-2xl font-black text-zinc-900 mb-4 tracking-tight">
             {t('directAnswerTitle', 'How to Predict Your Baby\'s Adult Height?')}
@@ -218,7 +219,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Left Column: Editor */}
         <div className="lg:col-span-5">
           <div className="sticky top-8">
             <GrowthAssessmentForm 
@@ -228,7 +228,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right Column: Charts */}
         <div className="lg:col-span-7 space-y-10">
           <HeightPredictor 
             gender={assessmentData.gender}
@@ -266,7 +265,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Articles Section */}
+      {/* 修正后的文章展示区 */}
       <section className="max-w-5xl mx-auto px-4 md:px-6 mt-12 md:mt-16">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-black text-zinc-900 flex items-center">
@@ -314,7 +313,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* SEO Content Section */}
       <footer className="max-w-5xl mx-auto px-4 md:px-6 mt-12 md:mt-16 mb-10">
         <div className="bg-white/50 backdrop-blur-sm p-6 md:p-12 rounded-[2.5rem] md:rounded-[3rem] border border-black/5 space-y-6">
           <h2 className="text-xl md:text-2xl font-black text-zinc-900 tracking-tight leading-tight">
@@ -333,7 +331,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* FAQ Section for SEO */}
           <div className="pt-8 border-t border-black/5 space-y-8">
             <h2 className="text-lg font-black text-zinc-900 uppercase tracking-widest">{t('faqTitle')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
