@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { differenceInDays, parseISO } from 'date-fns';
-import { TrendingUp, BookOpen, ArrowRight, Eye } from 'lucide-react';
+import { TrendingUp, BookOpen, ArrowRight, Eye, Calendar } from 'lucide-react';
 import { GrowthChart } from '../components/GrowthChart';
 import { GrowthAssessmentForm } from '../components/GrowthAssessmentForm';
 import { HeightPredictor } from '../components/HeightPredictor';
@@ -34,17 +34,18 @@ export default function Home() {
   const [recentArticles, setRecentArticles] = useState<Article[]>([]);
   const [loadingArticles, setLoadingArticles] = useState(true);
 
-  // 【需求4 & 5】移除 localStorage，所有数据初始化为空
+  // 需求：清空所有默认值，包括父母身高、生日和测量日期
   const [assessmentData, setAssessmentData] = useState<any>({
     gender: 'boy',
     birthday: '', 
-    fatherHeight: '175',
-    motherHeight: '160',
+    fatherHeight: '', // 已清空
+    motherHeight: '', // 已清空
     measurements: [{ date: '', height: '0', weight: '0' }]
   });
 
   useEffect(() => {
     document.title = `${t('title')} - ${t('aiPredictor')}`;
+    // 关键：将 HTML 语言属性与站点语言同步，影响日期控件显示
     document.documentElement.lang = i18n.language || 'en';
   }, [t, i18n.language]);
 
@@ -69,14 +70,14 @@ export default function Home() {
   };
 
   const handleAssessmentSubmit = (data: any) => {
-    setAssessmentData(data); // 【需求4】不再调用 localStorage.setItem
+    setAssessmentData(data);
   };
 
-  // 【需求3】数据过滤：自动排除没有日期的记录
+  // 需求：过滤掉没有填写日期的记录，确保数据分析准确
   const records = useMemo(() => {
     if (!assessmentData?.measurements || !assessmentData.birthday) return [];
     return assessmentData.measurements
-      .filter((m: any) => m.date && m.date !== "") // 核心过滤逻辑
+      .filter((m: any) => m.date && m.date !== "")
       .map((m: any, index: number) => {
         const ageInMonths = Number((differenceInDays(parseISO(m.date), parseISO(assessmentData.birthday)) / 30.4375).toFixed(2));
         return { id: `record-${index}`, date: m.date, ageInMonths, height: parseFloat(m.height), weight: parseFloat(m.weight) };
