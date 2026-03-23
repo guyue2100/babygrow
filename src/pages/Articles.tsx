@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Eye, Calendar, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 // 导入 supabase 客户端实例
-import { supabase } from '../src/services/supabase'; 
+import { supabase } from '../services/supabase'; 
 
 interface Article {
   id: number;
